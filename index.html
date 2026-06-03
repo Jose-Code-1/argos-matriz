@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#1B2A5E"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="ARGOS Matriz"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<title>ARGOS · Matriz de Criticidad</title>
+<style>
+/* ── RESET ── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html{height:100%;-webkit-text-size-adjust:100%;}
+
+/* ── BASE ── */
+body{
+  background:#F0F2EE;
+  font-family:'Trebuchet MS',Segoe UI,Arial,sans-serif;
+  font-size:14px;
+  min-height:100%;
+  padding-bottom:80px; /* espacio para bottom nav */
+  overscroll-behavior:contain;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── TOP HEADER (fijo) ── */
+.top-bar{
+  position:fixed;
+  top:0;left:0;right:0;
+  z-index:100;
+  background:#1B2A5E;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:0 14px;
+  height:56px;
+  box-shadow:0 2px 12px rgba(0,0,0,.25);
+}
+.logo-mark{
+  width:34px;height:34px;
+  border-radius:50%;
+  background:#97C832;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.logo-mark svg{width:20px;height:20px;}
+.brand-name{font-size:18px;font-weight:700;color:#fff;letter-spacing:.05em;}
+.brand-sub{font-size:9px;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.08em;margin-top:1px;}
+.header-badge{
+  margin-left:auto;
+  background:rgba(151,200,50,.2);
+  border:1px solid rgba(151,200,50,.5);
+  border-radius:20px;
+  padding:4px 10px;
+  font-size:9px;
+  color:#97C832;
+  font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+
+/* ── INSTALL BANNER ── */
+.install-banner{
+  display:none;
+  background:#97C832;
+  padding:10px 14px;
+  align-items:center;
+  gap:10px;
+  margin-top:56px;
+}
+.install-banner.show{display:flex;}
+.install-banner p{flex:1;font-size:12px;font-weight:600;color:#1B2A5E;line-height:1.4;}
+.install-btn{
+  background:#1B2A5E;color:#fff;
+  border:none;border-radius:8px;
+  padding:8px 14px;
+  font-size:12px;font-weight:700;
+  cursor:pointer;white-space:nowrap;
+  font-family:inherit;
+}
+.install-dismiss{
+  background:none;border:none;
+  color:#1B2A5E;font-size:18px;
+  cursor:pointer;padding:4px;line-height:1;
+}
+
+/* ── CONTENT ── */
+.content{
+  padding:0 0 16px;
+  margin-top:56px;
+}
+
+/* ── GREEN STRIPE ── */
+.top-stripe{height:4px;background:#97C832;}
+
+/* ── SECTION LABELS ── */
+.section{padding:14px 14px 0;}
+.section-label{
+  font-size:10px;font-weight:700;
+  color:#1B2A5E;
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  margin-bottom:10px;
+  display:flex;align-items:center;gap:6px;
+}
+.section-label span{
+  width:18px;height:18px;
+  background:#1B2A5E;color:#fff;
+  border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;
+}
+
+/* ── PROCESS CHIPS (scroll horizontal) ── */
+.proc-scroll-wrap{
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:0 14px 4px;
+  scrollbar-width:none;
+}
+.proc-scroll-wrap::-webkit-scrollbar{display:none;}
+.proc-chips{
+  display:flex;
+  gap:8px;
+  padding-bottom:2px;
+  width:max-content;
+}
+.proc-chip{
+  background:#fff;
+  border:1.5px solid #D4D8DC;
+  border-radius:20px;
+  padding:9px 14px;
+  cursor:pointer;
+  font-size:12px;
+  font-weight:600;
+  color:#4A5568;
+  white-space:nowrap;
+  transition:background .12s,border-color .12s,color .12s;
+  font-family:inherit;
+  min-height:40px;
+  touch-action:manipulation;
+}
+.proc-chip:active{opacity:.8;}
+.proc-chip.active{background:#1B2A5E;border-color:#1B2A5E;color:#fff;}
+
+/* ── BOTTOM NAV (tipo aviso) ── */
+.bottom-nav{
+  position:fixed;
+  bottom:0;left:0;right:0;
+  z-index:100;
+  background:#fff;
+  border-top:1px solid #DDE2D8;
+  display:flex;
+  box-shadow:0 -2px 12px rgba(0,0,0,.08);
+  padding-bottom:env(safe-area-inset-bottom, 0px);
+}
+.nav-tab{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  padding:10px 4px 10px;
+  cursor:pointer;
+  border:none;
+  background:transparent;
+  font-family:inherit;
+  touch-action:manipulation;
+  min-height:60px;
+  transition:background .12s;
+  border-top:3px solid transparent;
+}
+.nav-tab:active{background:#F5F5F5;}
+.nav-tab .nav-icon{font-size:18px;line-height:1;}
+.nav-tab .nav-label{font-size:10px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.04em;text-align:center;line-height:1.2;}
+.nav-tab.active-serv{border-top-color:#1B2A5E;background:#EEF1F8;}
+.nav-tab.active-serv .nav-label{color:#1B2A5E;}
+.nav-tab.active-mj{border-top-color:#97C832;background:#EBF5D6;}
+.nav-tab.active-mj .nav-label{color:#3A6010;}
+.nav-tab.active-cons{border-top-color:#6C9C2E;background:#F2F9E8;}
+.nav-tab.active-cons .nav-label{color:#3A5A0A;}
+
+/* ── TYPE INFO BAR ── */
+.type-info{
+  margin:12px 14px 0;
+  border-radius:10px;
+  padding:10px 14px;
+  font-size:12px;
+  line-height:1.6;
+  border-left:4px solid;
+  display:none;
+}
+.type-info.show{display:block;}
+.type-info.serv{background:#EEF1F8;border-color:#1B2A5E;color:#1B2A5E;}
+.type-info.mj  {background:#EBF5D6;border-color:#97C832;color:#3A6010;}
+.type-info.cons{background:#F2F9E8;border-color:#6C9C2E;color:#3A5A0A;}
+.type-info strong{font-weight:700;}
+
+/* ── DIVIDER ── */
+.divider{height:1px;background:#E4E8E0;margin:14px 14px 0;}
+
+/* ── RESULT AREA ── */
+.result-area{display:none;padding:0 14px;}
+.result-area.show{display:block;}
+
+.proc-title{font-size:18px;font-weight:700;color:#1B2A5E;margin:14px 0 2px;}
+.proc-sub{font-size:11px;color:#999;margin-bottom:14px;line-height:1.5;}
+
+/* ── LEGEND ── */
+.legend-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#555;}
+.leg-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
+
+/* ── CARDS GRID ── */
+.cards-grid{display:grid;gap:10px;margin-bottom:12px;}
+@media(min-width:540px){.cards-grid{grid-template-columns:1fr 1fr;}}
+
+/* ── CARD ── */
+.card{background:#fff;border:1px solid #DDE2D8;border-radius:12px;padding:14px;}
+.card-label{
+  font-size:10px;font-weight:700;
+  color:#1B2A5E;
+  text-transform:uppercase;
+  letter-spacing:.07em;
+  margin-bottom:12px;
+  display:flex;align-items:center;gap:6px;
+}
+
+/* ── SEVERIDAD ── */
+.sev-header{display:flex;gap:6px;margin-bottom:6px;}
+.sev-hcell{flex:1;font-size:9px;font-weight:600;color:#AAA;text-align:center;line-height:1.3;}
+.sev-cells{display:flex;gap:6px;}
+.sc{
+  flex:1;border-radius:8px;
+  padding:10px 4px;
+  text-align:center;
+  font-size:11px;font-weight:700;line-height:1.3;
+}
+.sc.ins{background:#EBF5D6;color:#3A6010;}
+.sc.mar{background:#FFF8DC;color:#7A5500;}
+.sc.cri{background:#FDEAEA;color:#7A1A1A;}
+.sc.cat{background:#1B2A5E;color:#fff;}
+
+/* ── OCURRENCIA ── */
+.occ-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;}
+.occ-row:last-child{margin-bottom:0;}
+.ob{
+  width:30px;height:30px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:13px;flex-shrink:0;
+}
+.ob-a{background:#1B2A5E;color:#fff;}
+.ob-b{background:#FDEAEA;color:#7A1A1A;border:1px solid #E8A0A0;}
+.ob-c{background:#FFF8DC;color:#7A5500;border:1px solid #F0CC70;}
+.ob-d{background:#FFF3CC;color:#6B4800;border:1px solid #F5C842;}
+.ob-e{background:#EBF5D6;color:#3A6010;border:1px solid #97C832;}
+.ob-f{background:#F2F9E8;color:#3A6010;border:1px solid #BDE07A;}
+.occ-text{font-size:12px;color:#444;line-height:1.35;}
+.occ-text strong{color:#1B2A5E;font-weight:700;}
+.occ-range{font-size:10px;color:#AAA;margin-top:2px;line-height:1.3;}
+
+/* ── MATRIZ ── */
+.matrix-card{background:#fff;border:1px solid #DDE2D8;border-radius:12px;padding:14px;margin-bottom:12px;}
+.scroll-hint{font-size:10px;color:#BBB;text-align:right;margin-bottom:6px;}
+.matrix-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.mx-table{min-width:260px;width:100%;}
+.mx-hrow{display:flex;gap:5px;margin-bottom:5px;padding-left:30px;}
+.mx-hcell{flex:1;font-size:9px;font-weight:700;color:#AAA;text-align:center;line-height:1.2;min-width:50px;}
+.mx-row{display:flex;gap:5px;margin-bottom:5px;align-items:center;}
+.mx-rl{width:26px;font-size:12px;font-weight:700;color:#999;text-align:center;flex-shrink:0;}
+.mx-cell{
+  flex:1;min-width:50px;
+  border-radius:8px;
+  padding:10px 2px;
+  text-align:center;
+  font-size:13px;font-weight:800;
+  line-height:1;
+  cursor:default;
+  transition:transform .1s;
+}
+.mx-cell:active{transform:scale(.95);}
+.mx-ins{background:#EBF5D6;color:#3A6010;}
+.mx-mar{background:#FFF8DC;color:#7A5500;}
+.mx-cri{background:#FDEAEA;color:#7A1A1A;}
+.mx-cat{background:#1B2A5E;color:#fff;}
+
+/* ── FORMATO AVISO ── */
+.format-card{
+  background:#EEF1F8;
+  border:1px solid #C0CADF;
+  border-radius:12px;
+  padding:14px;
+  margin-bottom:12px;
+}
+.format-card strong{color:#1B2A5E;font-size:12px;}
+.format-code{
+  background:#fff;
+  border-left:3px solid #97C832;
+  border-radius:0 8px 8px 0;
+  padding:10px 14px;
+  font-size:12px;
+  color:#1B2A5E;
+  font-family:'Courier New',monospace;
+  margin-top:10px;
+  letter-spacing:.02em;
+  font-weight:700;
+  word-break:break-all;
+  line-height:1.5;
+}
+.format-sub{margin-top:8px;font-size:11px;color:#888;line-height:1.5;}
+.format-sub strong{color:#1B2A5E;}
+
+/* ── HINT INICIAL ── */
+.hint{
+  text-align:center;
+  padding:3rem 1.5rem 2rem;
+  color:#BBB;
+}
+.hint-icon{font-size:40px;display:block;margin-bottom:12px;}
+.hint p{font-size:13px;line-height:1.6;}
+
+/* ── OFFLINE TOAST ── */
+.offline-toast{
+  position:fixed;bottom:72px;left:50%;transform:translateX(-50%);
+  background:#333;color:#fff;
+  border-radius:20px;padding:8px 18px;
+  font-size:12px;font-weight:600;
+  opacity:0;pointer-events:none;
+  transition:opacity .3s;z-index:200;
+  white-space:nowrap;
+}
+.offline-toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<!-- ── TOP BAR ── -->
+<div class="top-bar">
+  <div class="logo-mark">
+    <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="13" fill="#1B2A5E"/>
+      <path d="M14 4L16.8 11H24L18.2 15.2L20.4 22L14 18L7.6 22L9.8 15.2L4 11H11.2Z" fill="#fff"/>
+    </svg>
+  </div>
+  <div>
+    <div class="brand-name">ARGOS</div>
+    <div class="brand-sub">Cementos Argos S.A.</div>
+  </div>
+  <div class="header-badge">Criticidad</div>
+</div>
+
+<!-- ── INSTALL BANNER ── -->
+<div class="install-banner" id="installBanner">
+  <p>Instala la app para usarla sin internet</p>
+  <button class="install-btn" id="installBtn">Instalar</button>
+  <button class="install-dismiss" id="installDismiss">✕</button>
+</div>
+
+<!-- ── CONTENT ── -->
+<div class="content">
+  <div class="top-stripe"></div>
+
+  <!-- PASO 1 -->
+  <div class="section">
+    <p class="section-label"><span>1</span> Seleccione el proceso / área</p>
+  </div>
+  <div class="proc-scroll-wrap">
+    <div class="proc-chips" id="procChips"></div>
+  </div>
+
+  <!-- TIPO INFO -->
+  <div class="type-info" id="typeInfo"></div>
+
+  <!-- RESULTADO -->
+  <div class="result-area" id="resultArea">
+    <div class="proc-title" id="procTitle"></div>
+    <p class="proc-sub">Tiempos de paro · Probabilidad de ocurrencia · Matriz de riesgo</p>
+
+    <!-- LEYENDA -->
+    <div class="legend-wrap">
+      <div class="leg-item"><div class="leg-dot" style="background:#EBF5D6;border:1px solid #97C832;"></div>Bajo — Insignificante</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#FFF8DC;border:1px solid #F0CC70;"></div>Medio — Marginal</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#FDEAEA;border:1px solid #E8A0A0;"></div>Alto — Crítico</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#1B2A5E;"></div>Alto — Catastrófico</div>
+    </div>
+
+    <!-- CARDS: SEVERIDAD + OCURRENCIA -->
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-label">⏱ Severidad — Tiempos de paro</div>
+        <div class="sev-header">
+          <div class="sev-hcell">Insig.<br>(4)</div>
+          <div class="sev-hcell">Marg.<br>(3)</div>
+          <div class="sev-hcell">Crít.<br>(2)</div>
+          <div class="sev-hcell">Cat.<br>(1)</div>
+        </div>
+        <div class="sev-cells" id="sevCells"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">📅 Probabilidad de ocurrencia</div>
+        <div id="occRows"></div>
+      </div>
+    </div>
+
+    <!-- MATRIZ -->
+    <div class="matrix-card">
+      <div class="card-label">📊 Matriz de criticidad</div>
+      <p class="scroll-hint">← deslice para ver →</p>
+      <div class="matrix-scroll">
+        <div class="mx-table" id="matrixGrid"></div>
+      </div>
+    </div>
+
+    <!-- FORMATO AVISO -->
+    <div class="format-card" id="formatCard">
+      <strong>Formato del aviso:</strong><br>
+      <span style="font-size:11px;color:#555;">CALIFICACIÓN / TAG DEL EQUIPO / VERBO + DESCRIPCIÓN</span>
+      <div class="format-code" id="formatExample"></div>
+      <div class="format-sub">Para mejoras: &nbsp;<strong>MJ / TAG / DESCRIPCIÓN DE LA MEJORA</strong></div>
+    </div>
+  </div>
+
+  <!-- HINT INICIAL -->
+  <div class="hint" id="hintBlock">
+    <span class="hint-icon">☝️</span>
+    <p>Seleccione un proceso para ver los tiempos de paro y la matriz de criticidad</p>
+    <p style="margin-top:8px;font-size:11px;">Luego elija el tipo de aviso en la barra inferior</p>
+  </div>
+</div>
+
+<!-- ── BOTTOM NAV ── -->
+<div class="bottom-nav">
+  <button class="nav-tab" id="tab-serv" onclick="selectType('serv')">
+    <span class="nav-icon">🔧</span>
+    <span class="nav-label">SERV<br>Servicios</span>
+  </button>
+  <button class="nav-tab" id="tab-mj" onclick="selectType('mj')">
+    <span class="nav-icon">⬆️</span>
+    <span class="nav-label">MJ<br>Mejoras</span>
+  </button>
+  <button class="nav-tab" id="tab-cons" onclick="selectType('cons')">
+    <span class="nav-icon">📦</span>
+    <span class="nav-label">CONS<br>Consumibles</span>
+  </button>
+</div>
+
+<!-- ── OFFLINE TOAST ── -->
+<div class="offline-toast" id="offlineToast">📵 Sin conexión — modo offline</div>
+
+<script>
+/* ══ DATA ══ */
+const PROCESSES = [
+  {id:'em',   label:'Equipo Móvil',     sev:['< 24 h','24–48 h','48–96 h','> 96 h']},
+  {id:'tp',   label:'TP1 – TP2',        sev:['< 24 h','24–48 h','48–96 h','> 96 h']},
+  {id:'prh',  label:'PRH – ALM',        sev:['< 1 h','1–6 h','6–12 h','> 12 h']},
+  {id:'ma',   label:'MA1 · MA2 · PRC',  sev:['< 1 h','1–4 h','4–8 h','> 8 h']},
+  {id:'mp',   label:'MP1 – MP2',        sev:['< 2 h','6–12 h','12–24 h','> 24 h']},
+  {id:'ho',   label:'HO1 · HO2 · HO3', sev:['< 6 h','6–36 h','36–72 h','> 72 h']},
+  {id:'mc',   label:'MC4 – MC5',        sev:['< 6 h','6–18 h','18–48 h','> 48 h']},
+  {id:'em34', label:'EM3 – EM4',        sev:['< 2 h','2–12 h','12–24 h','> 24 h']},
+  {id:'sge',  label:'SG Energía',       sev:['< 15 min','15–30 min','30–60 min','> 1 h']},
+  {id:'sga',  label:'SG Aire',          sev:['< 15 min','15–30 min','30–60 min','> 1 h']},
+  {id:'sgw',  label:'SG Agua',          sev:['< 15 min','15–30 min','30–60 min','> 1 h']},
+];
+
+const OCC = [
+  {cls:'ob-a', l:'A', range:'1–7 días',     detail:'Urgencia — Aprobación Dirección y Gerencia'},
+  {cls:'ob-b', l:'B', range:'7–30 días',    detail:'Prioridad alta — atención inmediata'},
+  {cls:'ob-c', l:'C', range:'30–60 días',   detail:'Prioridad media'},
+  {cls:'ob-d', l:'D', range:'60–120 días',  detail:'Prioridad normal'},
+  {cls:'ob-e', l:'E', range:'120–180 días', detail:'Planificable'},
+  {cls:'ob-f', l:'F', range:'180–365 días', detail:'PPM — Mantenimiento preventivo'},
+];
+
+const TYPE_INFO = {
+  serv:{cls:'serv',html:'<strong>SERV — Servicios:</strong> Mantenimiento correctivo o preventivo por personal interno o contratista.<br>Formato: <strong>CALIFICACIÓN / TAG / VERBO + DESCRIPCIÓN</strong><br><em style="font-size:11px">Ej: A1 / MC5 / CORREGIR FUGA DE ACEITE CILINDRO ROD 2</em>'},
+  mj:  {cls:'mj',  html:'<strong>MJ — Mejoras:</strong> Incrementa eficiencia o capacidad de producción. Equipo en condiciones óptimas.<br>Formato: <strong>MJ / TAG / DESCRIPCIÓN</strong> — <em>No aplica matriz de criticidad.</em>'},
+  cons:{cls:'cons',html:'<strong>CONS — Consumibles:</strong> Materiales de consumo regular (filtros, lubricantes, empaques, etc.).<br>Formato: <strong>CONS / TAG / DESCRIPCIÓN + CANTIDAD</strong>'},
+};
+
+const SEV_CLS = ['ins','mar','cri','cat'];
+
+function mxClass(r,c){
+  const k = r+(4-c);
+  if(['A1','A2','B1','B2'].includes(k)) return 'mx-cat';
+  if(['A3','B3','C1','C2'].includes(k)) return 'mx-cri';
+  if(['A4','B4','C3','C4','D1','D2'].includes(k)) return 'mx-mar';
+  return 'mx-ins';
+}
+
+/* ── GENERAR CHIPS DE PROCESO ── */
+const chips = document.getElementById('procChips');
+PROCESSES.forEach(p => {
+  const b = document.createElement('button');
+  b.className = 'proc-chip';
+  b.textContent = p.label;
+  b.id = 'pc_'+p.id;
+  b.onclick = () => selectProcess(p.id);
+  chips.appendChild(b);
+});
+
+/* ── ESTADO ── */
+let currentProc = null;
+let currentType = null;
+
+/* ── SELECCIONAR TIPO ── */
+function selectType(type){
+  currentType = type;
+  ['serv','mj','cons'].forEach(t => {
+    const tab = document.getElementById('tab-'+t);
+    tab.className = 'nav-tab';
+    if(t === type) tab.classList.add('active-'+t);
+  });
+  const bar = document.getElementById('typeInfo');
+  const info = TYPE_INFO[type];
+  bar.className = 'type-info show '+info.cls;
+  bar.innerHTML = info.html;
+  if(currentProc) updateFormat();
+}
+
+/* ── SELECCIONAR PROCESO ── */
+function selectProcess(id){
+  document.querySelectorAll('.proc-chip').forEach(b => b.classList.remove('active'));
+  document.getElementById('pc_'+id).classList.add('active');
+  currentProc = id;
+  const p = PROCESSES.find(x => x.id === id);
+
+  document.getElementById('hintBlock').style.display = 'none';
+  document.getElementById('resultArea').classList.add('show');
+  document.getElementById('procTitle').textContent = p.label;
+
+  /* Severidad */
+  const sc = document.getElementById('sevCells');
+  sc.innerHTML = '';
+  p.sev.forEach((t,i) => {
+    const d = document.createElement('div');
+    d.className = 'sc '+SEV_CLS[i];
+    d.textContent = t;
+    sc.appendChild(d);
+  });
+
+  /* Ocurrencia */
+  const or = document.getElementById('occRows');
+  or.innerHTML = OCC.map(o =>
+    `<div class="occ-row">
+      <div class="ob ${o.cls}">${o.l}</div>
+      <div>
+        <div class="occ-text">Se materializa en <strong>${o.range}</strong></div>
+        <div class="occ-range">${o.detail}</div>
+      </div>
+    </div>`
+  ).join('');
+
+  /* Matriz */
+  const mg = document.getElementById('matrixGrid');
+  mg.innerHTML = '';
+  const hrow = document.createElement('div');
+  hrow.className = 'mx-hrow';
+  ['Insig (4)','Marg (3)','Crít (2)','Cat (1)'].forEach(h => {
+    hrow.innerHTML += `<div class="mx-hcell">${h}</div>`;
+  });
+  mg.appendChild(hrow);
+  ['A','B','C','D','E','F'].forEach((r,ri) => {
+    const row = document.createElement('div');
+    row.className = 'mx-row';
+    row.innerHTML = `<div class="mx-rl">${r}</div>`;
+    for(let c=0; c<4; c++){
+      const cell = document.createElement('div');
+      cell.className = 'mx-cell '+mxClass(r,c);
+      cell.textContent = r+(4-c);
+      cell.title = `Prob. ${r} (${OCC[ri].range}) · Severidad ${4-c}`;
+      row.appendChild(cell);
+    }
+    mg.appendChild(row);
+  });
+
+  updateFormat();
+
+  /* Scroll suave al resultado */
+  setTimeout(() => {
+    document.getElementById('resultArea').scrollIntoView({behavior:'smooth',block:'start'});
+  }, 60);
+}
+
+/* ── ACTUALIZAR FORMATO ── */
+function updateFormat(){
+  const p = PROCESSES.find(x => x.id === currentProc);
+  if(!p) return;
+  const tag = p.label.replace(/[\s·\-]+.*/, '').replace(/\s/g,'').toUpperCase().slice(0,5)+'001';
+  const fc = document.getElementById('formatExample');
+  const fcard = document.getElementById('formatCard');
+  if(currentType === 'mj'){
+    fc.textContent = `MJ / ${tag} / DESCRIPCIÓN DE LA MEJORA`;
+    fcard.style.borderColor = '#97C832';
+  } else if(currentType === 'cons'){
+    fc.textContent = `CONS / ${tag} / DESCRIPCIÓN + CANTIDAD`;
+    fcard.style.borderColor = '#6C9C2E';
+  } else {
+    fc.textContent = `A1 / ${tag} / CORREGIR CONDICIÓN CRÍTICA DETECTADA`;
+    fcard.style.borderColor = '#C0CADF';
+  }
+}
+
+/* ── PWA: SERVICE WORKER ── */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+
+/* ── PWA: INSTALL PROMPT ── */
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBanner').classList.add('show');
+});
+document.getElementById('installBtn').addEventListener('click', () => {
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(() => {
+    deferredPrompt = null;
+    document.getElementById('installBanner').classList.remove('show');
+  });
+});
+document.getElementById('installDismiss').addEventListener('click', () => {
+  document.getElementById('installBanner').classList.remove('show');
+});
+
+/* ── OFFLINE TOAST ── */
+function showOffline(){
+  const t = document.getElementById('offlineToast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+window.addEventListener('offline', showOffline);
+
+/* ── GENERAR ICONOS VÍA CANVAS (para manifest) ── */
+function makeIcon(size){
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  // Fondo azul
+  ctx.fillStyle = '#1B2A5E';
+  ctx.beginPath();
+  ctx.roundRect(0,0,size,size,size*.18);
+  ctx.fill();
+  // Círculo verde
+  const cx = size*.5, cy = size*.45, r = size*.3;
+  ctx.fillStyle = '#97C832';
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI*2);
+  ctx.fill();
+  // Estrella blanca (simplificada)
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  const pts = 5, outer = r*.72, inner = r*.32;
+  for(let i=0;i<pts*2;i++){
+    const angle = (i*Math.PI/pts) - Math.PI/2;
+    const dist  = i%2===0 ? outer : inner;
+    const x = cx + dist*Math.cos(angle);
+    const y = cy + dist*Math.sin(angle);
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  }
+  ctx.closePath();
+  ctx.fill();
+  // Texto
+  ctx.fillStyle = '#97C832';
+  ctx.font = `bold ${size*.14}px Trebuchet MS,sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('ARGOS', cx, size*.85);
+  return c.toDataURL('image/png');
+}
+
+/* Inyectar iconos en el manifest dinámicamente */
+(function(){
+  try{
+    const link192 = document.createElement('link');
+    link192.rel = 'apple-touch-icon';
+    link192.href = makeIcon(192);
+    document.head.appendChild(link192);
+  } catch(e){}
+})();
+</script>
+</body>
+</html>
