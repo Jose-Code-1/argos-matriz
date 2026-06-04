@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "Calculadora Matriz de Criticidad ARGOS",
-  "short_name": "ARGOS Matriz",
-  "description": "Herramienta para calcular la matriz de criticidad de mantenimiento de Cementos Argos S.A.",
+  "name": "ARGOS Derrotero de Mantenimiento",
+  "short_name": "ARGOS Derrotero",
+  "description": "Derrotero del proceso administrativo de mantenimiento: calculadora de criticidad, actores y tipos de avisos. Cementos Argos S.A.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
