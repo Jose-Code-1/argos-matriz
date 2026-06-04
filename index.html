@@ -168,6 +168,36 @@ body{
 .fcode{background:#fff;border-left:3px solid var(--ag);border-radius:0 6px 6px 0;padding:8px 12px;font-size:11px;color:var(--ab);font-family:'Courier New',monospace;margin-top:7px;font-weight:700;word-break:break-all;line-height:1.5;}
 .fbar-note{margin-top:6px;font-size:10px;color:#999;line-height:1.5;}
 
+/* ── SELECTOR DE TIPO ── */
+.type-sel-label{font-size:10px;font-weight:700;color:var(--ab);text-transform:uppercase;letter-spacing:.1em;margin:12px 0 7px;display:flex;align-items:center;gap:6px;}
+.type-sel-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;}
+.tsel-btn{
+  flex:1 1 auto;min-width:60px;
+  background:#fff;border:1.5px solid #D4D8DC;
+  border-radius:20px;padding:8px 10px;
+  cursor:pointer;font-size:11px;font-weight:600;
+  color:#4A5568;text-align:center;
+  transition:all .14s;font-family:inherit;
+  min-height:38px;touch-action:manipulation;
+}
+.tsel-btn:active{opacity:.8;}
+.tsel-serv.on{background:#1B2A5E;border-color:#1B2A5E;color:#fff;}
+.tsel-mj.on  {background:#97C832;border-color:#97C832;color:#1B2A5E;}
+.tsel-cons.on{background:#6C9C2E;border-color:#6C9C2E;color:#fff;}
+.tsel-aver.on{background:#7A1A1A;border-color:#7A1A1A;color:#fff;}
+
+.type-info-bar{
+  border-radius:8px;padding:9px 13px;
+  font-size:11px;line-height:1.6;
+  margin-bottom:10px;border-left:4px solid;
+  display:none;
+}
+.type-info-bar.show{display:block;}
+.ti-serv{background:#EEF1F8;border-color:#1B2A5E;color:#1B2A5E;}
+.ti-mj  {background:#EBF5D6;border-color:#97C832;color:#3A6010;}
+.ti-cons{background:#F2F9E8;border-color:#6C9C2E;color:#3A5A0A;}
+.ti-aver{background:#FDEAEA;border-color:#7A1A1A;color:#7A1A1A;}
+
 /* ══════════════════════════════════════
    P2 — ACTORES
 ══════════════════════════════════════ */
@@ -292,10 +322,20 @@ body{
         <div class="clbl">📊 Matriz de criticidad</div>
         <div id="mg"></div>
       </div>
-      <div class="fbar">
-        <strong>Formato del título:</strong> &nbsp;CALIFICACIÓN / TAG DEL EQUIPO / VERBO + DESCRIPCIÓN
+      <!-- SELECTOR DE TIPO -->
+      <div class="type-sel-label">② Tipo de aviso</div>
+      <div class="type-sel-row">
+        <button class="tsel-btn tsel-serv on" id="ts-serv" onclick="selType('serv')">🔧 SERV</button>
+        <button class="tsel-btn tsel-mj"   id="ts-mj"   onclick="selType('mj')"  >⬆ MJ</button>
+        <button class="tsel-btn tsel-cons" id="ts-cons"  onclick="selType('cons')">📦 CONS</button>
+        <button class="tsel-btn tsel-aver" id="ts-aver"  onclick="selType('aver')">⚠️ AVER</button>
+      </div>
+      <div class="type-info-bar" id="typeInfoBar"></div>
+
+      <div class="fbar" id="fbar">
+        <strong id="fbar-title">Formato del título:</strong>
         <div class="fcode" id="fe">A1 / MC5001 / CORREGIR CONDICIÓN CRÍTICA DETECTADA</div>
-        <div class="fbar-note">La calificación puede actualizarse durante el tratamiento en acuerdo entre ejecución, confiabilidad y planeación.</div>
+        <div class="fbar-note" id="fbar-note">La calificación puede actualizarse durante el tratamiento en acuerdo entre ejecución, confiabilidad y planeación.</div>
       </div>
     </div>
   </div>
@@ -336,6 +376,36 @@ body{
 </div>
 
 <script>
+/* ══ TIPO DE AVISO ══ */
+const TYPE_DATA = {
+  serv:{cls:'ti-serv', info:'<strong>SERV — Servicios:</strong> Mantenimiento correctivo o preventivo por personal interno o contratista.', fmt:(tag)=>`A1 / ${tag} / CORREGIR CONDICIÓN CRÍTICA DETECTADA`, note:'La calificación puede actualizarse durante el tratamiento en acuerdo entre ejecución, confiabilidad y planeación.'},
+  mj:  {cls:'ti-mj',   info:'<strong>MJ — Mejoras:</strong> El equipo debe estar en condiciones óptimas. No aplica matriz de criticidad.', fmt:(tag)=>`MJ / ${tag} / DESCRIPCIÓN DE LA MEJORA`, note:'No aplica calificación de criticidad para avisos de mejora.'},
+  cons:{cls:'ti-cons', info:'<strong>CONS — Consumibles:</strong> Materiales de consumo regular (filtros, lubricantes, empaques, etc.).', fmt:(tag)=>`CONS / ${tag} / DESCRIPCIÓN + CANTIDAD`, note:'Incluir referencia técnica, cantidad exacta y equipo al que va destinado.'},
+  aver:{cls:'ti-aver', info:'<strong>AVER — Averías:</strong> Daño o fallo fortuito que impide el funcionamiento normal del equipo. Aplica matrización.', fmt:(tag)=>`A1 / ${tag} / REEMPLAZAR COMPONENTE DESTRUIDO`, note:'Aplica matrización de criticidad; evaluar severidad e impacto inmediato.'},
+};
+let currentType = 'serv';
+let currentTag  = 'EQUIPO001';
+
+function selType(type){
+  currentType = type;
+  ['serv','mj','cons','aver'].forEach(t=>{
+    const b = document.getElementById('ts-'+t);
+    b.classList.remove('on');
+  });
+  document.getElementById('ts-'+type).classList.add('on');
+  const d = TYPE_DATA[type];
+  const bar = document.getElementById('typeInfoBar');
+  bar.className = 'type-info-bar show '+d.cls;
+  bar.innerHTML = d.info;
+  document.getElementById('fe').textContent = d.fmt(currentTag);
+  document.getElementById('fbar-note').textContent = d.note;
+}
+
+function updateFormat(tag){
+  currentTag = tag;
+  document.getElementById('fe').textContent = TYPE_DATA[currentType].fmt(tag);
+}
+
 /* ══ NAVEGACIÓN ══ */
 function showP(i){
   document.querySelectorAll('.panel').forEach((p,j)=>p.classList.toggle('on',j===i));
@@ -422,8 +492,10 @@ function selP(id){
     }
     mg.appendChild(row);
   });
-  document.getElementById('fe').textContent=
-    'A1 / '+p.l.split(/[\s·\-]+/)[0].toUpperCase()+'001 / CORREGIR CONDICIÓN CRÍTICA DETECTADA';
+  const tag = p.l.split(/[\s·\-]+/)[0].toUpperCase()+'001';
+  updateFormat(tag);
+  /* Mostrar selector de tipo y su info actual */
+  selType(currentType);
   setTimeout(()=>document.getElementById('ra').scrollIntoView({behavior:'smooth',block:'start'}),60);
 }
 
